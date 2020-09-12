@@ -8,183 +8,169 @@
 
 namespace mco {
 
+	/**
+	 * Log reporting serverity.
+	 */
+	enum class LogSeverity : byte {
 		/**
-		 * Log reporting serverity.
+		 * A verbose message. Should only be emitted
+		 * if Logger::AllowVerbose == true.
 		 */
-		enum class LogSeverity : byte {
-			/**
-			 * A verbose message. Should only be emitted
-			 * if Logger::AllowVerbose == true.
-			 */
-			Verbose,
-			/**
-			 * An informational message. This can be used to report information to the user.
-			 */
-			Info,
-
-			/**
-			 * An message that can be used to warn the user of a condition that may be wrong.
-			 */
-			Warning,
-
-			/**
-			 * An message that can be used to warn the user of a condition that is definitely wrong.
-			 */
-			Error
-		};
-		
+		Verbose,
 		/**
-		 * Logger LoggerSink.
+		 * An informational message. This can be used to report information to the user.
 		 */
-		struct Sink {
-			
-			/**
-			 * Output somewhere arbitrary.
-			 */
-			virtual void Output(const std::string& message, LogSeverity severity) = 0;
-			
-		};
+		Info,
 
-		
-		struct Logger {
-			
-			/**
-			 * Get a logger with a user-specified channel name.
-			 * 
-			 * \param[in] channel_name The channel name to use. Can be anything.
-			 */
-			static Logger CreateChannel(std::string channel_name) {
-				Logger l;
+		/**
+		 * An message that can be used to warn the user of a condition that may be wrong.
+		 */
+		Warning,
 
-				l.channel_name = channel_name;
-				return l;
-			}
+		/**
+		 * An message that can be used to warn the user of a condition that is definitely wrong.
+		 */
+		Error
+	};
 
-			static bool AllowVerbose;
+	/**
+	 * Logger sink.
+	 */
+	struct Sink {
+		/**
+		 * Output somewhere arbitrary.
+		 */
+		virtual void Output(const std::string& message, LogSeverity severity) = 0;
+	};
 
-			// Logging functions
+	struct Logger {
+		/**
+		 * Get a logger with a user-specified channel name.
+		 * 
+		 * \param[in] channel_name The channel name to use. Can be anything.
+		 */
+		static Logger CreateChannel(std::string channel_name) {
+			Logger l;
 
-			template<typename... Args>
-			inline void info(Args... args) {
-				if(!Logger::LoggerSink)
-					return;
+			l.channel_name = channel_name;
+			return l;
+		}
 
-				std::ostringstream ss;
-				DoBaseFormatting(ss, LogSeverity::Info);
-				
-				((ss << std::forward<Args>(args)), ...);
+		static bool AllowVerbose;
 
-				LoggerSink->Output(ss.str(), LogSeverity::Info);
+		// Logging functions
 
-				ss.clear();
-			}
+		template <typename... Args>
+		inline void info(Args... args) {
+			if(!Logger::LoggerSink)
+				return;
 
-			template<typename... Args>
-			inline void warn(Args... args) {
-				if(!Logger::LoggerSink)
-					return;
+			std::ostringstream ss;
+			DoBaseFormatting(ss, LogSeverity::Info);
 
-				std::ostringstream ss;
-				DoBaseFormatting(ss, LogSeverity::Warning);
-				
+			((ss << std::forward<Args>(args)), ...);
 
-				((ss << std::forward<Args>(args)), ...);
+			LoggerSink->Output(ss.str(), LogSeverity::Info);
 
-				LoggerSink->Output(ss.str(), LogSeverity::Warning);
-				ss.clear();
-			}
+			ss.clear();
+		}
 
-			template<typename... Args>
-			inline void error(mco::source_location loc, Args... args) {
-				if(!Logger::LoggerSink)
-					return;
+		template <typename... Args>
+		inline void warn(Args... args) {
+			if(!Logger::LoggerSink)
+				return;
 
+			std::ostringstream ss;
+			DoBaseFormatting(ss, LogSeverity::Warning);
+
+			((ss << std::forward<Args>(args)), ...);
+
+			LoggerSink->Output(ss.str(), LogSeverity::Warning);
+			ss.clear();
+		}
+
+		template <typename... Args>
+		inline void error(mco::source_location loc, Args... args) {
+			if(!Logger::LoggerSink)
+				return;
+
+			std::ostringstream ss;
+			DoBaseFormatting(ss, LogSeverity::Error);
+
+			((ss << std::forward<Args>(args)), ...);
+
+			ss << " (" << loc.file_name() << ':' << loc.line() << ')';
+
+			LoggerSink->Output(ss.str(), LogSeverity::Error);
+
+			ss.clear();
+		}
+
+		template <typename... Args>
+		inline void verbose(mco::source_location loc, Args... args) {
+			if(!Logger::LoggerSink || !Logger::AllowVerbose)
+				return;
+
+			std::ostringstream ss;
+			DoBaseFormatting(ss, LogSeverity::Verbose);
+
+			((ss << std::forward<Args>(args)), ...);
+
+			ss << " (" << loc.file_name() << ':' << loc.line() << ')';
+
+			LoggerSink->Output(ss.str(), LogSeverity::Verbose);
+
+			ss.clear();
+		}
+
+// I wish there was a better way to do this, but there doesn't reliably seem to be
+// unless I make all of these structs that get their own deduction guides,
+// which is slightly excessive. undef these if they break your own code.. sorry!
+#define error(...) error(mco::source_location::current(), ##__VA_ARGS__)
+#define verbose(...) verbose(mco::source_location::current(), ##__VA_ARGS__)
+
+		// log exceptions with stable formatting
+		inline void except(std::exception_ptr exception, mco::source_location loc = mco::source_location::current()) {
+			if(!Logger::LoggerSink)
+				return;
+
+			try {
+				// If the exception_ptr passed in was valid,
+				// rethrow it here so we can catch details ourselves.
+				if(exception)
+					std::rethrow_exception(exception);
+
+			} catch(std::exception& ex) {
 				std::ostringstream ss;
 				DoBaseFormatting(ss, LogSeverity::Error);
-				
-				
-				((ss << std::forward<Args>(args)), ...);
-				
-				ss << " (" << loc.file_name() << ':' << loc.line() << ')';
+
+				ss << "Exception caught: " << ex.what() << " (" << loc.file_name() << ':' << loc.line() << ')';
 
 				LoggerSink->Output(ss.str(), LogSeverity::Error);
-				
 				ss.clear();
 			}
-			
+		}
 
-			template<typename... Args>
-			inline void verbose(mco::source_location loc, Args... args) {
-				if(!Logger::LoggerSink || !Logger::AllowVerbose)
-					return;
+		inline Logger(Logger&& c) {
+			this->channel_name = c.channel_name;
+		}
 
-				std::ostringstream ss;
-				DoBaseFormatting(ss, LogSeverity::Verbose);
-				
+		static void SetSink(Sink* sink);
 
-				((ss << std::forward<Args>(args)), ...);
-				
-				ss << " (" << loc.file_name() << ':' << loc.line() << ')';
+	   private:
+		void DoBaseFormatting(std::ostringstream& oss, LogSeverity ls);
 
-				LoggerSink->Output(ss.str(), LogSeverity::Verbose);
+		inline Logger() {
+		}
 
-				ss.clear();
-			}
-			
-			// I wish there was a better way to do this, but there doesn't reliably seem to be
-			// unless I make all of these structs that get their own deduction guides,
-			// which is slightly excessive. undef these if they break your own code.. sorry!
-			#define error(...) error(mco::source_location::current(), ##__VA_ARGS__)
-			#define verbose(...) verbose(mco::source_location::current(), ##__VA_ARGS__)
-			
-			// log exceptions with stable formatting
-			inline void except(std::exception_ptr exception, mco::source_location loc = mco::source_location::current()) {
-				
-				if(!Logger::LoggerSink)
-					return;
-				
-				try {
-					
-					// If the exception_ptr passed in was valid,
-					// rethrow it here so we can catch details ourselves.
-					if(exception)
-						std::rethrow_exception(exception);
-					
-				} catch(std::exception& ex) {
-					std::ostringstream ss;
-					DoBaseFormatting(ss, LogSeverity::Error);
-					
-					ss << "Exception caught: " << ex.what()	<< " (" << loc.file_name() << ':' << loc.line() << ')';
-					
-					LoggerSink->Output(ss.str(), LogSeverity::Error);
-					ss.clear();
-				}
-			}
-			
-			inline Logger(Logger&& c) {
-				this->channel_name = c.channel_name;
-			}
+		static Sink* LoggerSink;
 
-			static void SetSink(Sink* sink);
-			
-		   private:
-		   
-			void DoBaseFormatting(std::ostringstream& oss, LogSeverity ls);
-		   
-			inline Logger() {
-			}
+		static std::string TimestampString();
 
-
-			static Sink* LoggerSink;
-
-
-			static std::string TimestampString();
-
-			/**
-			 * The channel name that the logger will use.
-			 */
-			std::string channel_name;
-		};
-
+		/**
+		 * The channel name that the logger will use.
+		 */
+		std::string channel_name;
+	};
 
 } // namespace mco

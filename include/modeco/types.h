@@ -16,7 +16,7 @@ namespace mco {
 	typedef std::uint64_t uint64;
 
 	/**
-	 * 4-byte "three-byte" type.
+	 * 4-byte "three-byte" marker type.
 	 */
 	typedef uint32 threebyte_t;
 

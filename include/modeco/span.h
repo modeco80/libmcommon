@@ -63,4 +63,4 @@ namespace mco {
 		return Span<T> { buffer, size };
 	}
 
-}
+} // namespace mco
