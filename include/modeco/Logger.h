@@ -44,21 +44,21 @@ namespace mco {
 	};
 
 	struct Logger {
+		
 		/**
-		 * Get a logger with a user-specified channel name.
+		 * Create a logger with a user-specified channel name.
 		 * 
-		 * \param[in] channel_name The channel name to use. Can be anything.
+		 * \param[in] channel The channel name to use. Can be anything.
 		 */
-		static Logger CreateChannel(std::string channel_name) {
-			Logger l;
+		static Logger CreateLogger(const std::string& channel);
 
-			l.channel_name = channel_name;
-			return l;
-		}
+		/**
+		 * Set the sink used for all loggers to this sink.
+		 */
+		static void SetSink(Sink* sink);
+		
+		static void SetAllowVerbose(bool allow);
 
-		static bool AllowVerbose;
-
-		// Logging functions
 
 		template <typename... Args>
 		inline void info(Args... args) {
@@ -123,9 +123,9 @@ namespace mco {
 			ss.clear();
 		}
 
-// I wish there was a better way to do this, but there doesn't reliably seem to be
-// unless I make all of these structs that get their own deduction guides,
-// which is slightly excessive. undef these if they break your own code.. sorry!
+// I wish there was a better way to do this, but there doesn't reliably seem to be unless I make all of these structs
+// that get their own deduction guides, which is slightly (very) excessive. 
+// Feel free to undef this kludge if it ends up breaking your own code.. sorry!
 #define error(...) error(mco::source_location::current(), ##__VA_ARGS__)
 #define verbose(...) verbose(mco::source_location::current(), ##__VA_ARGS__)
 
@@ -144,26 +144,25 @@ namespace mco {
 				std::ostringstream ss;
 				DoBaseFormatting(ss, LogSeverity::Error);
 
-				ss << "Exception caught: " << ex.what() << " (" << loc.file_name() << ':' << loc.line() << ')';
+				ss << "Exception thrown: " << ex.what() << " (" << loc.file_name() << ':' << loc.line() << ')';
 
 				LoggerSink->Output(ss.str(), LogSeverity::Error);
 				ss.clear();
 			}
 		}
 
-		inline Logger(Logger&& c) {
-			this->channel_name = c.channel_name;
-		}
+		// move constructor
+		Logger(Logger&& c);
 
-		static void SetSink(Sink* sink);
 
 	   private:
+	   
 		void DoBaseFormatting(std::ostringstream& oss, LogSeverity ls);
 
-		inline Logger() {
-		}
+		Logger();
 
 		static Sink* LoggerSink;
+		static bool AllowVerbose;
 
 		static std::string TimestampString();
 

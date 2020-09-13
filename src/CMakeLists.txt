@@ -1,6 +1,7 @@
 
 set(MCOMMON_SOURCES 
 	Logger.cpp
+	IostreamLoggerSink.cpp
 )
 
 set(MCOMMON_PUBLIC_INCLUDES
@@ -16,7 +17,6 @@ add_library(mcommon STATIC ${MCOMMON_SOURCES})
 set_property(TARGET mcommon PROPERTY CXX_STANDARD 17)
 set_property(TARGET mcommon PROPERTY CXX_STANDARD_REQUIRED ON)
 
-# Allow projects that import mcommon to immediately get includes of core
 target_include_directories(mcommon PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
 if(_MCOMMON_STDLIB STREQUAL "llvm")

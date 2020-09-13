@@ -14,6 +14,24 @@ namespace mco {
 	 * Whether or not verbose/debug messages should be allowed across all channels.
 	 */
 	bool Logger::AllowVerbose = false;
+	
+	
+	// static functions
+	
+	Logger Logger::CreateLogger(const std::string& channel) {
+		Logger logger;
+		logger.channel_name = channel;
+		
+		return logger;
+	}
+
+	void Logger::SetSink(Sink* sink) {
+		Logger::LoggerSink = sink;
+	}
+	
+	void Logger::SetAllowVerbose(bool allow) {
+		Logger::AllowVerbose = allow;
+	}
 
 	std::string Logger::TimestampString() {
 		std::time_t t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
@@ -50,9 +68,16 @@ namespace mco {
 				break;
 		}
 	}
-
-	void Logger::SetSink(Sink* sink) {
-		Logger::LoggerSink = sink;
+	
+	Logger::Logger() {
+		
+		
 	}
+	
+	Logger::Logger(Logger&& c) {
+			this->channel_name = c.channel_name;
+	}
+
+
 
 } // namespace mco
