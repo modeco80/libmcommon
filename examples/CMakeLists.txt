@@ -33,3 +33,9 @@ set_property(TARGET loggertest PROPERTY CXX_STANDARD 17)
 set_property(TARGET loggertest PROPERTY CXX_STANDARD_REQUIRED ON)
 
 target_link_libraries(loggertest mcommon)
+
+
+add_executable(threadpooltest threadpooltest.cpp)
+set_property(TARGET threadpooltest PROPERTY CXX_STANDARD 17)
+set_property(TARGET threadpooltest PROPERTY CXX_STANDARD_REQUIRED ON)
+target_link_libraries(threadpooltest mcommon)
