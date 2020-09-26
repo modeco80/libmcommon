@@ -15,14 +15,4 @@ namespace mco {
 	typedef std::int64_t int64;
 	typedef std::uint64_t uint64;
 
-	/**
-	 * 4-byte "three-byte" marker type.
-	 */
-	typedef uint32 threebyte_t;
-
-	/**
-	 * Size of a threebyte_t.
-	 */
-	constexpr static std::size_t threebyte_size = 3u;
-
 } // namespace mco
