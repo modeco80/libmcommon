@@ -17,6 +17,8 @@ Feel free to use in your own projects! The library API may change sometimes on t
 
 - A fully backwards compatible implementation of C++20's `std::source_location`.
 	- Allows compilation of some code all the way back to C++14 (depending on how good your C++ compiler is)!
+	
+- Binary reading/writing API using standard IOStreams.
 
 - A thread pool ready to use, with no dependencies besides the STL itself.
 	

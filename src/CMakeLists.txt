@@ -3,6 +3,8 @@ set(MCOMMON_SOURCES
 	Logger.cpp
 	IostreamLoggerSink.cpp
 	ThreadPool.cpp
+	BinaryReader.cpp
+	BinaryWriter.cpp
 )
 
 # All mcommon public includes.
@@ -13,6 +15,8 @@ set(MCOMMON_PUBLIC_INCLUDES
 	${PROJECT_SOURCE_DIR}/include/modeco/source_location.h
 	${PROJECT_SOURCE_DIR}/include/modeco/Logger.h
 	${PROJECT_SOURCE_DIR}/include/modeco/ThreadPool.h
+	${PROJECT_SOURCE_DIR}/include/modeco/BinaryReader.h
+	${PROJECT_SOURCE_DIR}/include/modeco/BinaryWriter.h
 )
 
 add_library(mcommon STATIC ${MCOMMON_SOURCES})
