@@ -9,6 +9,7 @@ mco::Logger other_logger = mco::Logger::CreateLogger("Other Subsystem");
 int main() {
 	
 	// set the sink to the default iostream sink
+	// (Comment out this line and build in debug mode or add #define DOPT_ASSERT to see what happens?)
 	mco::Logger::SetSink(&theSink);
 	// allow verbose messages.
 	mco::Logger::SetAllowVerbose(true);

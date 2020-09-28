@@ -3,6 +3,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <modeco/defines.h>
 #include <modeco/types.h>
 #include <modeco/source_location.h>
 
@@ -44,7 +45,6 @@ namespace mco {
 	};
 
 	struct Logger {
-		
 		/**
 		 * Create a logger with a user-specified channel name.
 		 * 
@@ -56,15 +56,11 @@ namespace mco {
 		 * Set the sink used for all loggers to this sink.
 		 */
 		static void SetSink(Sink* sink);
-		
-		static void SetAllowVerbose(bool allow);
 
+		static void SetAllowVerbose(bool allow);
 
 		template <typename... Args>
 		inline void info(Args... args) {
-			if(!Logger::LoggerSink)
-				return;
-
 			std::ostringstream ss;
 			DoBaseFormatting(ss, LogSeverity::Info);
 
@@ -77,9 +73,6 @@ namespace mco {
 
 		template <typename... Args>
 		inline void warn(Args... args) {
-			if(!Logger::LoggerSink)
-				return;
-
 			std::ostringstream ss;
 			DoBaseFormatting(ss, LogSeverity::Warning);
 
@@ -91,9 +84,6 @@ namespace mco {
 
 		template <typename... Args>
 		inline void error(mco::source_location loc, Args... args) {
-			if(!Logger::LoggerSink)
-				return;
-
 			std::ostringstream ss;
 			DoBaseFormatting(ss, LogSeverity::Error);
 
@@ -108,7 +98,7 @@ namespace mco {
 
 		template <typename... Args>
 		inline void verbose(mco::source_location loc, Args... args) {
-			if(!Logger::LoggerSink || !Logger::AllowVerbose)
+			if(!Logger::AllowVerbose)
 				return;
 
 			std::ostringstream ss;
@@ -124,16 +114,13 @@ namespace mco {
 		}
 
 // I wish there was a better way to do this, but there doesn't reliably seem to be unless I make all of these structs
-// that get their own deduction guides, which is slightly (very) excessive. 
+// that get their own deduction guides, which is slightly (very) excessive.
 // Feel free to undef this kludge if it ends up breaking your own code.. sorry!
 #define error(...) error(mco::source_location::current(), ##__VA_ARGS__)
 #define verbose(...) verbose(mco::source_location::current(), ##__VA_ARGS__)
 
 		// log exceptions with stable formatting
 		inline void except(std::exception_ptr exception, mco::source_location loc = mco::source_location::current()) {
-			if(!Logger::LoggerSink)
-				return;
-
 			try {
 				// If the exception_ptr passed in was valid,
 				// rethrow it here so we can catch details ourselves.
@@ -154,9 +141,7 @@ namespace mco {
 		// move constructor
 		Logger(Logger&& c);
 
-
 	   private:
-	   
 		void DoBaseFormatting(std::ostringstream& oss, LogSeverity ls);
 
 		Logger();

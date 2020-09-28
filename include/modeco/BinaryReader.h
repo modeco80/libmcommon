@@ -57,7 +57,7 @@ namespace mco {
 		}
 
 		/**
-		 * Read a string, stopping when a NUL is reached or the stream goes bac..
+		 * Read a string, stopping when a NUL is reached or the stream goes bad..
 		 */
 		inline std::string ReadString() {
 			std::string str;
@@ -78,9 +78,8 @@ namespace mco {
 		}
 
 		/** 
-		 * Read a string (either wide or ASCII), stopping at the specified length.
-		 * Really only useful if you're absoultely sure that the string has a fixed size.
-		 * Otherwise just use the overload that takes no arguments.
+		 * Read a string, stopping at the specified length.
+		 * Only useful if you're absoultely sure that the string has a fixed size.
 		 *
 		 * \param[in] length Length of the string.
 		 */
@@ -107,7 +106,7 @@ namespace mco {
 			for(int i = 0; i < length; ++i) {
 				T item;
 
-				if(!ReadSingleType<T>(item))
+				if(!ReadSingleType(item))
 					break;
 
 				array.push_back(item);
@@ -118,9 +117,10 @@ namespace mco {
 
 		/**
 		 * Read a certain amount of data into buffer.
+		 * This data is read in one-byte intervals, so that sizeof() can be used.
 		 *
-		 * \param[in] buffer Buffer to write to. Must be valid.
-		 * \param[in] size Size.
+		 * \param[in] buffer Buffer to read into. Must be non-nullptr.
+		 * \param[in] size The size you want to read.
 		 */
 		bool ReadRawBuffer(char* buffer, std::size_t size);
 
